@@ -91,6 +91,10 @@ static const char *mutevol[]    = { "/usr/bin/wpctl",   "set-mute",   "@DEFAULT_
 static const char *bright_up[]      = { "/usr/bin/brightnessctl", "set", "10%+",        NULL };
 static const char *bright_down[]    = { "/usr/bin/brightnessctl", "set", "10%-",        NULL };
 
+static const char *play_pause_media[]    = { "/usr/bin/playerctl", "play-pause",        NULL };
+static const char *previous_media[]    = { "/usr/bin/playerctl", "previous",        NULL };
+static const char *next_media[]    = { "/usr/bin/playerctl", "next",        NULL };
+
 static const int repeat_rate = 25;
 static const int repeat_delay = 500;
 
@@ -195,12 +199,22 @@ static const Key keys[] = {
 	TAGKEYS(          XKB_KEY_8, XKB_KEY_asterisk,                   7),
 	TAGKEYS(          XKB_KEY_9, XKB_KEY_parenleft,                  8),
 	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_C,          quit,           {0} },
-	{ 0,                   	XF86XK_AudioLowerVolume,	spawn, {.v = downvol } },
-	{ 0,                   	XF86XK_AudioMute,		spawn, {.v = mutevol } },
+	{ 0,	      		XF86XK_AudioLowerVolume,	spawn, {.v = downvol } },
+	{ 0,			XF86XK_AudioMute,		spawn, {.v = mutevol } },
 	{ 0,			XF86XK_AudioRaiseVolume,	spawn, {.v = upvol   } },
+	{ 0,			XF86XK_AudioPlay,		spawn, {.v = play_pause_media } },
 	{ 0,			XF86XK_MonBrightnessUp,		spawn, {.v = bright_up } }, 
 	{ 0, 			XF86XK_MonBrightnessDown,		spawn, {.v = bright_down } },
+	{ 0, 			XF86XK_AudioPlay,		spawn, {.v = play_pause_media } },
+	{ 0, 			XF86XK_AudioPrev,		spawn, {.v = previous_media } },
+	{ 0, 			XF86XK_AudioNext,		spawn, {.v = next_media } },
 
+	{ MODKEY,               XKB_KEY_F6,			spawn, {.v = downvol } },
+	{ MODKEY,               XKB_KEY_F5,			spawn, {.v = mutevol } },
+	{ MODKEY,		XKB_KEY_F7,			spawn, {.v = upvol   } },
+	{ MODKEY, 		XKB_KEY_F9,			spawn, {.v = play_pause_media } },
+	{ MODKEY,		XKB_KEY_F8,			spawn, {.v = previous_media } },
+	{ MODKEY,		XKB_KEY_F10,			spawn, {.v = next_media } },
 	/* Ctrl-Alt-Backspace and Ctrl-Alt-Fx used to be handled by X server */
 	{ WLR_MODIFIER_CTRL|WLR_MODIFIER_ALT,XKB_KEY_Terminate_Server, quit, {0} },
 	/* Ctrl-Alt-Fx is used to switch to another VT, if you don't know what a VT is
