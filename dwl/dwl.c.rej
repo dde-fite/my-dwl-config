@@ -1,11 +1,107 @@
 --- dwl.c
 +++ dwl.c
-@@ -2677,6 +2677,8 @@ tag(const Arg *arg)
+@@ -481,7 +484,17 @@ applyrules(Client *c)
+ 			}
+ 		}
+ 	}
++
++	wl_list_for_each(m, &mons, link) {
++		// tag with different monitor selected by rules
++		if (m->tagset[m->seltags] & newtags) {
++			mon = m;
++			break;
++		}
++	}
++
+ 	setmon(c, mon, newtags);
++	attachclients(mon);
+ }
+ 
+ void
+@@ -2110,8 +2188,6 @@ printstatus(void)
+ 	wl_list_for_each(m, &mons, link) {
+ 		occ = urg = 0;
+ 		wl_list_for_each(c, &clients, link) {
+-			if (c->mon != m)
+-				continue;
+ 			occ |= c->tags;
+ 			if (c->isurgent)
+ 				urg |= c->tags;
+@@ -2745,15 +2822,25 @@ tag(const Arg *arg)
  	sel->tags = arg->ui & TAGMASK;
  	focusclient(focustop(selmon), 1);
  	arrange(selmon);
-+	if (follow == 1)
-+		view(arg);
++	wl_list_for_each(m, &mons, link) {
++		attachclients(m);
++		arrange(m);
++	}
+ 	printstatus();
+ }
+ 
+ void
+ tagmon(const Arg *arg)
+ {
++	Monitor *m;
+ 	Client *sel = focustop(selmon);
+-	if (sel)
++	if (sel) {
+ 		setmon(sel, dirtomon(arg->i), 0);
++		wl_list_for_each(m, &mons, link) {
++			arrange(m);
++		}
++		focusclient(focustop(sel->mon), 1);
++	}
+ }
+ 
+ void
+@@ -3032,13 +3135,45 @@ urgent(struct wl_listener *listener, void *data)
+ void
+ view(const Arg *arg)
+ {
+-	if (!selmon || (arg->ui & TAGMASK) == selmon->tagset[selmon->seltags])
++	Monitor *m, *origm = selmon;
++	unsigned int newtags;
++
++	if (!selmon || (arg->ui & TAGMASK) == selmon->tagset[selmon->seltags]) {
+ 		return;
+-	selmon->seltags ^= 1; /* toggle sel tagset */
++	}
++
++	newtags = origm->tagset[origm->seltags ^ 1];
++
++	/* swap tags when trying to display a tag from another monitor */
++	if (arg->ui & TAGMASK) {
++		newtags = arg->ui & TAGMASK;
++	}
++	wl_list_for_each(m, &mons, link) {
++		if (m != origm && newtags & m->tagset[m->seltags]) {
++			/* prevent displaying all tags (MODKEY-0) when multiple monitors
++			 * are connected */
++			if (newtags & origm->tagset[origm->seltags]) {
++				return;
++			}
++			m->seltags ^= 1;
++			m->tagset[m->seltags] = origm->tagset[origm->seltags];
++			attachclients(m);
++			/* Beware: this changes selmon */
++			focusclient(focustop(m), 1);
++			arrange(m);
++			break;
++		}
++	}
++
++	origm->seltags ^= 1; /* toggle sel tagset */
+ 	if (arg->ui & TAGMASK)
+-		selmon->tagset[selmon->seltags] = arg->ui & TAGMASK;
+-	focusclient(focustop(selmon), 1);
+-	arrange(selmon);
++		origm->tagset[origm->seltags] = arg->ui & TAGMASK;
++
++	/* Change selmon back to orig mon */
++	selmon = origm;
++	attachclients(origm);
++	focusclient(focustop(origm), 1);
++	arrange(origm);
  	printstatus();
  }
  
