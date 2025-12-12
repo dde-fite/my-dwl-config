@@ -95,6 +95,10 @@ static const char *play_pause_media[]    = { "/usr/bin/playerctl", "play-pause",
 static const char *previous_media[]    = { "/usr/bin/playerctl", "previous",        NULL };
 static const char *next_media[]    = { "/usr/bin/playerctl", "next",        NULL };
 
+static const char *suspend[]    = { "/usr/bin/sudo", "/usr/bin/systemctl", "suspend",        NULL };
+static const char *hibernate[]  = { "/usr/bin/sudo", "/usr/bin/systemctl", "hibernate",        NULL };
+static const char *lock_sway[]       = { "/home/norr/suckless/screen-lock.sh", NULL};
+
 static const int repeat_rate = 25;
 static const int repeat_delay = 500;
 
@@ -199,6 +203,9 @@ static const Key keys[] = {
 	TAGKEYS(          XKB_KEY_8, XKB_KEY_asterisk,                   7),
 	TAGKEYS(          XKB_KEY_9, XKB_KEY_parenleft,                  8),
 	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_C,          quit,           {0} },
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_S, spawn, {.v = suspend} },
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_H, spawn, {.v = hibernate} },
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_L, spawn, {.v = lock_sway} },
 	{ 0,	      		XF86XK_AudioLowerVolume,	spawn, {.v = downvol } },
 	{ 0,			XF86XK_AudioMute,		spawn, {.v = mutevol } },
 	{ 0,			XF86XK_AudioRaiseVolume,	spawn, {.v = upvol   } },
