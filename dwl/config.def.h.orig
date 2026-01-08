@@ -27,7 +27,7 @@ static uint32_t colors[][3]                = {
 };
 
 /* tagging */
-static char *tags[] = { "Browsing", "Coding", "Music", "4", "5", "6", "7", "8", "9" };
+static char *tags[] = { "Browsing", "Coding", "Terminals", "Music", "Other" };
  
 /* logging */
 static int log_level = WLR_ERROR;
@@ -65,16 +65,11 @@ static const Layout layouts[] = {
 */
 /* NOTE: ALWAYS add a fallback rule, even if you are completely sure it won't be used */
 static const MonitorRule monrules[] = {
-	/* name		mfact	nmaster	scale	layout		rotate/reflect			x 	y 	resx	resy	rate		mode 	adaptive*/
-	/* example of a HiDPI laptop monitor at 120Hz:
-	{ "eDP-1",    	0.5f,  	1,      2,    	&layouts[0], 	WL_OUTPUT_TRANSFORM_NORMAL,	0, 	0, 	0, 	0, 	120.000f, 	1, 	1},
-	* mode let's the user decide on how dwl should implement the modes:
-	* -1 Sets a custom mode following the users choice
-	* All other number's set the mode at the index n, 0 is the standard mode; see wlr-randr*/
-	{ "eDP-1",   	0.5f,  	1,      1,    	&layouts[0], 	WL_OUTPUT_TRANSFORM_NORMAL,	1,	0,	1920,	1920,	144.000f,	0,	1 },
-	{ "HDMI-1",   	0.5f,  	1,      1,    	&layouts[0], 	WL_OUTPUT_TRANSFORM_NORMAL,	0,	0,	1920,	1080,	160.000f,	0,	1 },
+	/* name		mfact	nmaster	scale	layout		rotate/reflect			x 	y */
+	{ "eDP-1",   	0.5f,  	1,      1,    	&layouts[0], 	WL_OUTPUT_TRANSFORM_NORMAL,	1,	0},
+	{ "HDMI-1",   	0.5f,  	1,      1,    	&layouts[0], 	WL_OUTPUT_TRANSFORM_NORMAL,	0,	0},
 	/* defaults */
-	{ NULL,		0.55f,	1,	1,	&layouts[0],	WL_OUTPUT_TRANSFORM_NORMAL,	-1,	-1,	0,	0,	0.0f,		0,	1},
+	{ NULL,		0.55f,	1,	1,	&layouts[0],	WL_OUTPUT_TRANSFORM_NORMAL,	-1,	-1},
 };
 
 /* keyboard */
@@ -92,6 +87,17 @@ static const struct xkb_rule_names xkb_rules = {
 static const char *upvol[]      = { "/usr/bin/wpctl",   "set-volume", "@DEFAULT_AUDIO_SINK@",      "10%+", "--limit", "1.0",      NULL };
 static const char *downvol[]    = { "/usr/bin/wpctl",   "set-volume", "@DEFAULT_AUDIO_SINK@",      "10%-",      NULL };
 static const char *mutevol[]    = { "/usr/bin/wpctl",   "set-mute",   "@DEFAULT_AUDIO_SINK@",      "toggle",   NULL };
+
+static const char *bright_up[]      = { "/usr/bin/brightnessctl", "set", "10%+",        NULL };
+static const char *bright_down[]    = { "/usr/bin/brightnessctl", "set", "10%-",        NULL };
+
+static const char *play_pause_media[]    = { "/usr/bin/playerctl", "play-pause",        NULL };
+static const char *previous_media[]    = { "/usr/bin/playerctl", "previous",        NULL };
+static const char *next_media[]    = { "/usr/bin/playerctl", "next",        NULL };
+
+static const char *suspend[]    = { "/usr/bin/sudo", "/usr/bin/systemctl", "suspend",        NULL };
+static const char *hibernate[]  = { "/usr/bin/sudo", "/usr/bin/systemctl", "hibernate",        NULL };
+static const char *lock_sway[]       = { "/home/norr/suckless/screen-lock.sh", NULL};
 
 static const int repeat_rate = 25;
 static const int repeat_delay = 500;
@@ -197,10 +203,25 @@ static const Key keys[] = {
 	TAGKEYS(          XKB_KEY_8, XKB_KEY_asterisk,                   7),
 	TAGKEYS(          XKB_KEY_9, XKB_KEY_parenleft,                  8),
 	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_C,          quit,           {0} },
-	{ 0,                       XF86XK_AudioLowerVolume, spawn, {.v = downvol } },
-	{ 0,                       XF86XK_AudioMute, spawn, {.v = mutevol } },
-	{ 0,                       XF86XK_AudioRaiseVolume, spawn, {.v = upvol   } },
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_S, spawn, {.v = suspend} },
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_H, spawn, {.v = hibernate} },
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_L, spawn, {.v = lock_sway} },
+	{ 0,	      		XF86XK_AudioLowerVolume,	spawn, {.v = downvol } },
+	{ 0,			XF86XK_AudioMute,		spawn, {.v = mutevol } },
+	{ 0,			XF86XK_AudioRaiseVolume,	spawn, {.v = upvol   } },
+	{ 0,			XF86XK_AudioPlay,		spawn, {.v = play_pause_media } },
+	{ 0,			XF86XK_MonBrightnessUp,		spawn, {.v = bright_up } }, 
+	{ 0, 			XF86XK_MonBrightnessDown,		spawn, {.v = bright_down } },
+	{ 0, 			XF86XK_AudioPlay,		spawn, {.v = play_pause_media } },
+	{ 0, 			XF86XK_AudioPrev,		spawn, {.v = previous_media } },
+	{ 0, 			XF86XK_AudioNext,		spawn, {.v = next_media } },
 
+	{ MODKEY,               XKB_KEY_F6,			spawn, {.v = downvol } },
+	{ MODKEY,               XKB_KEY_F5,			spawn, {.v = mutevol } },
+	{ MODKEY,		XKB_KEY_F7,			spawn, {.v = upvol   } },
+	{ MODKEY, 		XKB_KEY_F9,			spawn, {.v = play_pause_media } },
+	{ MODKEY,		XKB_KEY_F8,			spawn, {.v = previous_media } },
+	{ MODKEY,		XKB_KEY_F10,			spawn, {.v = next_media } },
 	/* Ctrl-Alt-Backspace and Ctrl-Alt-Fx used to be handled by X server */
 	{ WLR_MODIFIER_CTRL|WLR_MODIFIER_ALT,XKB_KEY_Terminate_Server, quit, {0} },
 	/* Ctrl-Alt-Fx is used to switch to another VT, if you don't know what a VT is

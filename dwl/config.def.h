@@ -14,16 +14,22 @@ static const int showbar                   = 1; /* 0 means no bar */
 static const int topbar                    = 1; /* 0 means bottom bar */
 static const int vertpad                   = 5; /* vertical padding of bar */
 static const int sidepad                   = 30; /* horizontal padding of bar */
+static const int smartgaps                 = 1;  /* 1 means no outer gap when there is only one window */
+static int gaps                            = 1;  /* 1 means gaps between windows are added */
+static const unsigned int gappx            = 10; /* gap pixel between windows */
 static const char *fonts[]                 = {"JetBrainsMono Nerd Font Mono:style=Bold:size=11"};
-static const float rootcolor[]             = COLOR(0x000000ff);
 
-/* This conforms to the xdg-protocol. Set the alpha to zero to restore the old behavior */
-static const float fullscreen_bg[]         = {0.0f, 0.0f, 0.0f, 1.0f}; /* You can also use glsl colors */
+/* Fondo general rosita pastel (más oscurito para contraste) */
+static const float rootcolor[]             = COLOR(0xe8a9c4ff);
+
+/* Fullscreen background igual más oscuro */
+static const float fullscreen_bg[]         = COLOR(0xe8a9c4ff);
+
 static uint32_t colors[][3]                = {
-	/*               fg          bg          border    */
-	[SchemeNorm] = { 0xbbbbbbff, 0x222222ff, 0x444444ff },
-	[SchemeSel]  = { 0xeeeeeeff, 0x005577ff, 0x005577ff },
-	[SchemeUrg]  = { 0,          0,          0x770000ff },
+    /*               fg            bg            border        */
+    [SchemeNorm] = { 0xffffffff, 0xd989b6ff, 0xc96fa3ff }, /* ahora sí hay contraste */
+    [SchemeSel]  = { 0xffffffff, 0xc45f9aff, 0xb8518cff }, /* rosa fuerte real cute */
+    [SchemeUrg]  = { 0xffffffff, 0xd12949ff, 0xd12949ff }, /* rojito más dark para leer bien */
 };
 
 /* tagging */
@@ -84,8 +90,8 @@ static const struct xkb_rule_names xkb_rules = {
 
 /* If you use pipewire add somewhere in your constants definition section. Use "wpctl status" to
    find out the real sink ID, 0 is a placeholder here. */
-static const char *upvol[]      = { "/usr/bin/wpctl",   "set-volume", "@DEFAULT_AUDIO_SINK@",      "10%+", "--limit", "1.0",      NULL };
-static const char *downvol[]    = { "/usr/bin/wpctl",   "set-volume", "@DEFAULT_AUDIO_SINK@",      "10%-",      NULL };
+static const char *upvol[]      = { "/usr/bin/wpctl",   "set-volume", "@DEFAULT_AUDIO_SINK@",      "5%+", "--limit", "1.0",      NULL };
+static const char *downvol[]    = { "/usr/bin/wpctl",   "set-volume", "@DEFAULT_AUDIO_SINK@",      "5%-",      NULL };
 static const char *mutevol[]    = { "/usr/bin/wpctl",   "set-mute",   "@DEFAULT_AUDIO_SINK@",      "toggle",   NULL };
 
 static const char *bright_up[]      = { "/usr/bin/brightnessctl", "set", "10%+",        NULL };
@@ -99,8 +105,10 @@ static const char *suspend[]    = { "/usr/bin/sudo", "/usr/bin/systemctl", "susp
 static const char *hibernate[]  = { "/usr/bin/sudo", "/usr/bin/systemctl", "hibernate",        NULL };
 static const char *lock_sway[]       = { "/home/norr/suckless/screen-lock.sh", NULL};
 
-static const int repeat_rate = 25;
-static const int repeat_delay = 500;
+static const char *screenshot[]	= { "flameshot", "gui", NULL };
+
+static const int repeat_rate = 30;
+static const int repeat_delay = 480;
 
 /* Trackpad */
 static const int tap_to_click = 1;
@@ -161,7 +169,7 @@ static const enum libinput_config_tap_button_map button_map = LIBINPUT_CONFIG_TA
 
 /* commands */
 static const char *termcmd[] = { "kitty", NULL };
-static const char *menucmd[] = { "wmenu-run", NULL };
+static const char *menucmd[] = { "sirula", NULL };
 
 static const Key keys[] = {
 	/* Note that Shift changes certain key codes: c -> C, 2 -> at, etc. */
@@ -178,6 +186,7 @@ static const Key keys[] = {
 	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_Return,     zoom,		 {0} },
 	{ MODKEY,                    XKB_KEY_b,          togglebar,      {0} },
 	{ MODKEY,                    XKB_KEY_Tab,        view,           {0} },
+	{ MODKEY,                    XKB_KEY_g,          togglegaps,     {0} },
 	{ MODKEY,                    XKB_KEY_q,          killclient,     {0} },
 	//{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_C,          killclient,     {0} },
 	{ MODKEY,                    XKB_KEY_q,          killclient,     {0} },
@@ -188,20 +197,21 @@ static const Key keys[] = {
 	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_space,      togglefloating, {0} },
 	{ MODKEY,                    XKB_KEY_e,         togglefullscreen, {0} },
 	{ MODKEY,                    XKB_KEY_0,          view,           {.ui = ~0} },
-	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_parenright, tag,            {.ui = ~0} },
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_equal, tag,            {.ui = ~0} },
 	{ MODKEY,                    XKB_KEY_comma,      focusmon,       {.i = WLR_DIRECTION_LEFT} },
 	{ MODKEY,                    XKB_KEY_period,     focusmon,       {.i = WLR_DIRECTION_RIGHT} },
 	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_less,       tagmon,         {.i = WLR_DIRECTION_LEFT} },
 	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_greater,    tagmon,         {.i = WLR_DIRECTION_RIGHT} },
+	{ 0,			XKB_KEY_Print,			spawn,					{.v = screenshot } },
 	TAGKEYS(          XKB_KEY_1, XKB_KEY_exclam,                     0),
-	TAGKEYS(          XKB_KEY_2, XKB_KEY_at,                         1),
-	TAGKEYS(          XKB_KEY_3, XKB_KEY_numbersign,                 2),
+	TAGKEYS(          XKB_KEY_2, XKB_KEY_quotedbl,                         1),
+	TAGKEYS(          XKB_KEY_3, XKB_KEY_periodcentered,                 2),
 	TAGKEYS(          XKB_KEY_4, XKB_KEY_dollar,                     3),
 	TAGKEYS(          XKB_KEY_5, XKB_KEY_percent,                    4),
-	TAGKEYS(          XKB_KEY_6, XKB_KEY_asciicircum,                5),
-	TAGKEYS(          XKB_KEY_7, XKB_KEY_ampersand,                  6),
-	TAGKEYS(          XKB_KEY_8, XKB_KEY_asterisk,                   7),
-	TAGKEYS(          XKB_KEY_9, XKB_KEY_parenleft,                  8),
+	TAGKEYS(          XKB_KEY_6, XKB_KEY_ampersand,                5),
+	TAGKEYS(          XKB_KEY_7, XKB_KEY_slash,                  6),
+	TAGKEYS(          XKB_KEY_8, XKB_KEY_parenleft,                   7),
+	TAGKEYS(          XKB_KEY_9, XKB_KEY_parenright,                  8),
 	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_C,          quit,           {0} },
 	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_S, spawn, {.v = suspend} },
 	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_H, spawn, {.v = hibernate} },
