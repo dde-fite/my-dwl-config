@@ -66,12 +66,16 @@ static const char unknown_str[] = "n/a";
  */
 static const struct arg args[] = {
 	/* function	format		argument */
-	{ run_command,	"   %s",	"playerctl metadata xesam:title"},
-	{ run_command,	" - %s",	"playerctl metadata xesam:artist"},
+	{ run_command,	"   %s",	"playerctl metadata xesam:title | awk '{if (length($0) <= 50) print $0; else print substr($0, 1, 50) \"...\"}'"},
+	{ run_command,	" - %s",	"playerctl metadata xesam:artist | awk '{if (length($0) <= 20) print $0; else print substr($0, 1, 20) \"...\"}'"},
 	{ separator, " | " },
 	{ battery_perc,	"   %s%%",	"BAT1"	},
 	{ separator, " | " },
 	{ run_command, 	"   %s%%",	"/usr/bin/wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{if ($0 ~ /\\[MUTED\\]/) {print \"\"} else {printf int($2 * 100)}}'"},
 	{ separator, " | " },
-	{ datetime, 	"   %s",	"%F %T" },
+//	{ datetime, 	"   %s",	"%F %T" },
+	{ run_command, "󰔟   %s left", "date -u -d @$(( $(date -d 'tomorrow 0:0' +%s) - $(date +%s) )) +'%Hh %Mm'" },
+
+	{ separator, " | " },
+	{ datetime, 	"   %s",	"%A %e %b %Y %I:%M:%S %p " },
 };

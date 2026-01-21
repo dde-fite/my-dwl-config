@@ -1,0 +1,15 @@
+dwl has the following dependencies:
+- libinput
+- wayland
+- wlroots (compiled with the libinput backend)
+- xkbcommon
+- wayland-protocols (compile-time only)
+- pkg-config (compile-time only)
+
+dwl has the following additional dependencies if XWayland support is enabled:
+- libxcb
+- libxcb-wm
+- wlroots (compiled with X11 support)
+- Xwayland (runtime only)
+
+
